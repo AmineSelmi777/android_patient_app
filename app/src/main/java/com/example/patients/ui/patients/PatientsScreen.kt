@@ -11,18 +11,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.patients.data.model.Patient
+import com.example.patients.data.model.PatientRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,3 +131,69 @@ fun PatientCard(patient: Patient) {
         }
     }
 }
+
+@Composable
+fun AddPatientDialog(onDismiss: () -> Unit, onConfirm: (PatientRequest) -> Unit) {
+    var nom by rememberSaveable { mutableStateOf("") }
+    var prenom by rememberSaveable { mutableStateOf("") }
+    var age by rememberSaveable { mutableStateOf("") }
+    var medecin by rememberSaveable { mutableStateOf("") }
+    val formulaireValide = nom.isNotBlank() && prenom.isNotBlank()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+
+    // Affiche chaque message envoyé par le ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nouveau patient") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = nom, onValueChange = { nom = it },
+                    label = { Text("Nom *") }, singleLine = true
+                )
+                OutlinedTextField(
+                    value = prenom, onValueChange = { prenom = it },
+                    label = { Text("Prénom *") }, singleLine = true
+                )
+                OutlinedTextField(
+                    value = age, onValueChange = { age = it.filter { c -> c.isDigit() } },
+                    label = { Text("Âge") }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = medecin, onValueChange = { medecin = it },
+                    label = { Text("Médecin") }, singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = formulaireValide,
+                onClick = {
+                    onConfirm(
+                        PatientRequest(
+                            nom = nom.trim(),
+                            prenom = prenom.trim(),
+                            age = age.toIntOrNull(),
+                            medecin = medecin.trim().ifBlank { null }
+                        )
+                    )
+                }
+            ) { Text("Enregistrer") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Annuler") }
+        }
+    )
+}
+
+
+
+
+

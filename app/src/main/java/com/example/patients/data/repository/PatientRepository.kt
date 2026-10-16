@@ -2,6 +2,7 @@ package com.example.patients.data.repository
 
 import com.example.patients.data.model.ApiError
 import com.example.patients.data.model.Patient
+import com.example.patients.data.model.PatientRequest
 import com.example.patients.data.remote.PatientApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -37,4 +38,9 @@ class PatientRepository(
             else -> apiError.message
         }
     }
+
+    suspend fun createPatient(request: PatientRequest): Result<Patient> =
+        safeCall { api.createPatient(request) }
+
+
 }
