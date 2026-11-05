@@ -1,6 +1,7 @@
 package com.example.patients.data.remote
 
-
+import com.example.patients.data.model.Consultation
+import com.example.patients.data.model.ConsultationRequest
 import com.example.patients.data.model.Patient
 import com.example.patients.data.model.PatientRequest
 import retrofit2.Response
@@ -29,4 +30,10 @@ interface PatientApi {
     // 204 = réponse sans corps : on récupère la réponse brute
     @DELETE("patients/{id}")
     suspend fun deletePatient(@Path("id") id: String): Response<Unit>
+
+    @GET("consultations")
+    suspend fun getConsultations(@Query("patient") patientId: String): List<Consultation>
+
+    @POST("consultations")
+    suspend fun createConsultation(@Body consultation: ConsultationRequest): Consultation
 }
